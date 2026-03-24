@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Дашборд | Google Таблицы</title>
+    <style>
+        /* ----- МИНИМАЛЬНЫЙ, НО ЧИСТЫЙ ДИЗАЙН ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fb;  /* очень светлый фон, чтобы глаза не уставали */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* контейнер-центровка с максимальной шириной, но таблицы всё равно широкие */
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;          /* аккуратный отступ между окнами */
+        }
+
+        /* карточка для каждого iframe — лёгкая тень и скругление, но без перегруза */
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        /* заголовок каждой таблицы — минималистично, но понятно */
+        .card-header {
+            padding: 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #eef2f6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-icon {
+            font-size: 1.4rem;
+            line-height: 1;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #1e293b;
+            letter-spacing: -0.2px;
+        }
+
+        .card-sub {
+            font-size: 0.75rem;
+            color: #5b6e8c;
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-family: monospace;
+        }
+
+        /* ссылка "открыть в новой вкладке" — минимальная, но полезная */
+        .open-link {
+            font-size: 0.75rem;
+            color: #3b82f6;
+            text-decoration: none;
+            background: #f8fafc;
+            padding: 5px 12px;
+            border-radius: 30px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .open-link:hover {
+            background: #eef2ff;
+            color: #1e40af;
+            text-decoration: none;
+        }
+
+        /* обёртка iframe — фиксированная высота = ровно 1/4 экрана,
+           но с учётом отступов и заголовка визуально аккуратно */
+        .iframe-wrapper {
+            width: 100%;
+            height: 28vh;          /* чуть больше четверти, чтобы смотрелось свободно (≈30% экрана) 
+                                      можно оставить 25vh если строго "четверть", но 28vh выглядит воздушнее */
+            min-height: 260px;     /* даже на очень маленьких экранах iframe не схлопнется */
+            background: #fefefe;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            background: #fff;
+        }
+
+        /* футер с подсказкой — минималистичный, не мешает */
+        .info-footer {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #8b9ab0;
+            border-top: 1px solid #e4e9f0;
+            padding-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+
+        .info-footer span {
+            background: #f1f4f9;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+
+        /* адаптивность: на совсем узких экранах кнопки и заголовки остаются читаемы */
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+            .dashboard {
+                gap: 18px;
+            }
+            .card-header {
+                padding: 10px 16px;
+            }
+            .iframe-wrapper {
+                height: 30vh;
+                min-height: 220px;
+            }
+            .open-link {
+                padding: 4px 10px;
+            }
+        }
+
+        /* если хочется ещё больше строгости — скролл внутри iframe всегда аккуратный */
+        iframe {
+            overflow: auto;
+        }
+
+        /* убираем синюю рамку фокуса для красоты (но доступность не ломаем) */
+        iframe:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: -2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <!-- ПЕРВОЕ ОКНО: Google Таблица 1 -->
+    <div class="card">
+        <div class="card-header">
+            <div class="title-section">
+                <div class="title-icon">📊</div>
+                <div class="card-title">Дашборд · Финансовый отчёт</div>
+                <div class="card-sub">Таблица 1</div>
+            </div>
+            <a href="#" class="open-link" id="openSheet1Btn" target="_blank">↗ Открыть в новой вкладке</a>
+        </div>
+        <div class="iframe-wrapper">
+            <iframe 
+                id="sheet1Frame"
+                src="https://docs.google.com/spreadsheets/d/1VbUwRrKqj_5lQn3PxYzX7cF2eG8hJkLmNpOqRtSuTv/edit?usp=sharing"
+                title="Google Таблица — Основной дашборд"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-modals allow-popups-to-escape-sandbox"
+                referrerpolicy="no-referrer-when-downgrade"
+                loading="lazy"
+            ></iframe>
+        </div>
+    </div>
+
+    <!-- ВТОРОЕ ОКНО: Google Таблица 2 -->
+    <div class="card">
+        <div class="card-header">
+            <div class="title-section">
+                <div class="title-icon">📈</div>
+                <div class="card-title">Аналитика · Метрики и KPI</div>
+                <div class="card-sub">Таблица 2</div>
+            </div>
+            <a href="#" class="open-link" id="openSheet2Btn" target="_blank">↗ Открыть в новой вкладке</a>
+        </div>
+        <div class="iframe-wrapper">
+            <iframe 
+                id="sheet2Frame"
+                src="https://docs.google.com/spreadsheets/d/1XyZAbCdEfGhIjKlMnOpQrStUvWxYz1234567890/edit?usp=sharing"
+                title="Google Таблица — Метрики и аналитика"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-modals allow-popups-to-escape-sandbox"
+                referrerpolicy="no-referrer-when-downgrade"
+                loading="lazy"
+            ></iframe>
+        </div>
+    </div>
+</div>
+
+<div class="info-footer">
+    <span>📌 Замените ссылки iframe на ваши реальные Google Таблицы (File → Поделиться → Опубликовать в интернете / ссылка для редактирования)</span>
+    <span>🖱️ Клик по кнопке "Открыть в новой вкладке" — удобно для полноэкранной работы</span>
+</div>
+
+<script>
+    (function() {
+        // ----- Утилита: динамически обновлять ссылки "открыть в новой вкладке" в соответствии с iframe src -----
+        // Это сделано для удобства: если вы поменяете src в коде, кнопки сами подхватят актуальные ссылки.
+        // Также позволяет легко кастомизировать под публичные таблицы.
+
+        const frame1 = document.getElementById('sheet1Frame');
+        const frame2 = document.getElementById('sheet2Frame');
+        const openBtn1 = document.getElementById('openSheet1Btn');
+        const openBtn2 = document.getElementById('openSheet2Btn');
+
+        // Функция обновления href для кнопок (чтобы при клике открывался именно тот URL, который в iframe)
+        function updateExternalLinks() {
+            if (frame1 && openBtn1) {
+                let url1 = frame1.src;
+                if (url1 && url1 !== 'about:blank') {
+                    openBtn1.href = url1;
+                } else {
+                    // fallback (на случай, если src вдруг пустой)
+                    openBtn1.href = 'https://docs.google.com/spreadsheets/';
+                }
+            }
+            if (frame2 && openBtn2) {
+                let url2 = frame2.src;
+                if (url2 && url2 !== 'about:blank') {
+                    openBtn2.href = url2;
+                } else {
+                    openBtn2.href = 'https://docs.google.com/spreadsheets/';
+                }
+            }
+        }
+
+        // также добавим защиту: если клик по кнопке, но ссылка не ведёт на реальную таблицу,
+        // можно вывести подсказку (но по умолчанию просто откроет то, что в iframe)
+        function handleOpenClick(event, frameElement) {
+            // если src iframe является корректным URL — всё ок.
+            // дополнительно: если таблица требует логина, пользователь откроет в новой вкладке и авторизуется.
+            const currentSrc = frameElement.src;
+            if (!currentSrc || currentSrc === 'about:blank' || currentSrc.includes('docs.google.com') === false) {
+                // не блокируем, просто выводим в консоль сообщение для разработчика (не мешает пользователю)
+                console.info('Дашборд: убедитесь, что src iframe указывает на корректную Google Таблицу.');
+            }
+        }
+
+        if (openBtn1 && frame1) {
+            openBtn1.addEventListener('click', (e) => {
+                handleOpenClick(e, frame1);
+                // ссылка уже обновлена в href, поведение стандартное
+            });
+        }
+        if (openBtn2 && frame2) {
+            openBtn2.addEventListener('click', (e) => {
+                handleOpenClick(e, frame2);
+            });
+        }
+
+        // вызываем обновление при загрузке страницы (и если вдруг src динамически меняется — но у нас статика)
+        updateExternalLinks();
+
+        // небольшая дополнительная фича: если таблица не загружается (например, нет прав),
+        // iframe покажет стандартное сообщение Google, но ничего не ломается.
+        // добавим прозрачную обработку ошибок загрузки (по желанию)
+        if (frame1) {
+            frame1.onerror = function() {
+                // тихо логируем, дизайн не трогаем
+                console.log('Первый iframe: невозможно загрузить таблицу. Проверьте права доступа или ссылку.');
+            };
+        }
+        if (frame2) {
+            frame2.onerror = function() {
+                console.log('Второй iframe: невозможно загрузить таблицу. Проверьте права доступа или ссылку.');
+            };
+        }
+
+        // добавим для комфорта: при изменении размера окна если нужно сохранить пропорции — ничего не делаем,
+        // но высота iframe адаптивна (vh) и подстраивается под любые экраны.
+        // Для особо требовательных: можно пересчитывать высоту wrapper, но vh работает идеально.
+    })();
+</script>
+
+<!-- 
+    ⚙️ ИНСТРУКЦИЯ ПО НАСТРОЙКЕ:
+    1. Откройте этот файл в любом браузере (Chrome, Edge, Safari, Firefox).
+    2. Чтобы вставить свои Google Таблицы:
+        - Откройте нужную таблицу → нажмите «Файл» → «Опубликовать в интернете» → вкладка «Внедрить»
+          или просто скопируйте URL из адресной строки (если таблица открыта для просмотра/редактирования).
+        - Замените значение src внутри iframe (id="sheet1Frame" и sheet2Frame) на ваши ссылки.
+        - Также можно изменить заголовки и иконки по вкусу.
+    3. Размер окон: .iframe-wrapper имеет height: 28vh (примерно 28% экрана). 
+       Если нужна строго четверть (25vh) — измените в CSS на 25vh. Окна друг под другом.
+    4. Кнопка "Открыть в новой вкладке" автоматически подхватывает ссылку из iframe.
+    5. Все iframe поддерживают авторизацию Google (sandbox разрешает нужные функции).
+    
+    Минимальный дизайн:
+        - Аккуратные карточки, легкие тени, скруглённые углы.
+        - Чистый шрифт, отступы.
+        - При наведении лёгкий эффект.
+        - Адаптация под мобильные устройства.
+        - Нет лишних анимаций и перегруза.
+-->
+</body>
+</html>
